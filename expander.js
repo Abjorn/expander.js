@@ -4,53 +4,52 @@
 // in it's parent container.
 //
 // Author: Corey Schram
-// Last Modified: 2/19/2012
+// Last Modified: 2/27/2012
 //
 
 (function($) {
 
-  var expandX = function (el) {
-    var $el = $(el),
-        newWidth = 0;
-
-    newWidth = $el.parent().width();
-    $el.siblings().each(function (i, e) {
-      newWidth = newWidth - $(e).width();
+  // Retrieve all relevant siblings, filtering out unwanted siblings.
+  // Elements with fixed or absolute positioning, or the class "expand-exclude" are excluded.
+  function getSiblings(elem) {
+    return $(elem).siblings().filter(function () {
+      if ($(this).hasClass("expand-exclude")
+      || (($(this).css("position") === "absolute" || $(this).css("position") === "fixed") && !$(this).hasClass("expand-include"))) {
+        return false;
+      } else {
+        return true;
+      }
     });
-
-    $el.width(newWidth);
-  };
-
-  var expandY = function (el) {
-    var $el = $(el),
-        newHeight = 0;
-
-    newHeight = $el.parent().height();
-    $el.siblings().each(function (i, e) {
-      newHeight = newHeight - $(e).height();
-    });
-
-    $el.height(newHeight);
-  };
+  }
 
   $.fn.expander = function () {
-    $el = $(this);
+    element = $(this);
 
-    $el.find(".expand-x").each(function (i, el) {
-      expandX(el);
-      $(el).resize(function (event) {
-        expandX(el);
+    setTimeout(function () {
+      // Calculate widths for all expand-x elements.
+      element.find(".expand-x").each(function (i, el) {
+        var newWidth = $(el).parent().outerWidth();
+
+        getSiblings(el).each(function () {
+          newWidth = newWidth - $(this).outerWidth();
+        });
+
+        $(el).width(newWidth);
       });
-    });
 
-    $el.find(".expand-y").each(function (i, el) {
-      expandY(el);
-      $(el).resize(function (event) {
-        expandY(el);
+      // Calculate heights for all expand-y elements.
+      element.find(".expand-y").each(function (i, el) {
+        var newHeight = $(el).parent().outerHeight();
+
+        getSiblings(el).each(function () {
+          newHeight = newHeight - $(this).outerHeight();
+        });
+
+        $(el).height(newHeight);
       });
-    });
 
-    return this;
+      return this;
+    }, 1);
   };
 
 })(jQuery);
